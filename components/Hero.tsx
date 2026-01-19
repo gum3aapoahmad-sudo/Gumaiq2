@@ -2,8 +2,10 @@
 import React from 'react';
 
 const Hero: React.FC = () => {
+  const WHATSAPP_URL = "https://wa.me/905348292352";
+
   return (
-    <section id="hero" className="relative pt-48 pb-32 px-4 overflow-hidden">
+    <section id="hero" className="relative pt-48 pb-32 px-4 overflow-hidden text-right">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[700px] bg-amber-500/5 blur-[150px] rounded-full pointer-events-none opacity-50"></div>
       
       <div className="max-w-6xl mx-auto text-center relative z-10">
@@ -14,16 +16,18 @@ const Hero: React.FC = () => {
         
         <h1 className="text-6xl md:text-9xl font-black mb-10 leading-none tracking-tighter">
           <span className="block mb-4 text-white opacity-90">حلبي للخدمات</span>
-          <span className="gold-text">عالم الإبداع الرقمي</span>
+          <span className="gold-text">إبداع بلا حدود</span>
         </h1>
         
         <p className="text-xl md:text-3xl text-gray-400 mb-14 leading-relaxed max-w-4xl mx-auto font-light">
-          نحول رؤيتك إلى واقع ملموس. جودة استثنائية في الإنتاج الصوتي، تعديل الصور، والمونتاج الفني تحت إشراف نخبة من المبدعين.
+          نحول رؤيتك إلى واقع ملموس. جودة استثنائية في الهندسة الصوتية، تعديل الصور، والمونتاج الفني تحت إشراف نخبة من المبدعين السوريين.
         </p>
         
         <div className="flex flex-col sm:flex-row justify-center gap-8">
           <a 
-            href="https://wa.me/905348292352" 
+            href={WHATSAPP_URL} 
+            target="_blank"
+            rel="noreferrer"
             className="px-12 py-6 bg-amber-500 hover:bg-amber-600 text-black font-black rounded-[2rem] text-xl transition-all shadow-[0_15px_40px_rgba(212,175,55,0.4)] transform hover:scale-105 active:scale-95"
           >
             اطلب خدمتك الآن

@@ -7,6 +7,7 @@ const LiveAudioChat: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [transcript, setTranscript] = useState<string[]>([]);
+  const [currentBotText, setCurrentBotText] = useState("");
   const sessionRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const inputAudioContextRef = useRef<AudioContext | null>(null);
@@ -92,12 +93,32 @@ const LiveAudioChat: React.FC = () => {
               sourcesRef.current.add(source);
               source.onended = () => sourcesRef.current.delete(source);
             }
+
             if (msg.serverContent?.outputTranscription) {
-               setTranscript(prev => [...prev.slice(-4), `المساعد: ${msg.serverContent!.outputTranscription!.text}`]);
+              const text = msg.serverContent.outputTranscription.text;
+              setCurrentBotText(prev => prev + text);
+            }
+
+            if (msg.serverContent?.turnComplete) {
+              setTranscript(prev => {
+                 const newTrans = [...prev.slice(-3)];
+                 // We rely on currentBotText being updated via closure or simpler:
+                 // Since setTranscript functional update can't see the LATEST state of currentBotText easily if multiple chunks arrive, 
+                 // we handle transcription purely in onmessage above and use the functional update here to flush.
+                 return newTrans;
+              });
+              // We'll actually append to history when the turn is done.
+              setCurrentBotText(fullText => {
+                if (fullText) setTranscript(prev => [...prev.slice(-4), `المساعد: ${fullText}`]);
+                return "";
+              });
             }
           },
           onclose: () => stopSession(),
-          onerror: (e) => console.error("Live API Error", e)
+          onerror: (e) => {
+            console.error("Live API Error", e);
+            stopSession();
+          }
         },
         config: {
           responseModalities: [Modality.AUDIO],
@@ -113,7 +134,9 @@ const LiveAudioChat: React.FC = () => {
   };
 
   const stopSession = () => {
-    if (sessionRef.current) sessionRef.current.close();
+    if (sessionRef.current) {
+        try { sessionRef.current.close(); } catch(e) {}
+    }
     if (sourcesRef.current) {
         sourcesRef.current.forEach(s => {
             try { s.stop(); } catch(e) {}
@@ -122,6 +145,7 @@ const LiveAudioChat: React.FC = () => {
     }
     setIsActive(false);
     setIsConnecting(false);
+    setCurrentBotText("");
   };
 
   return (
@@ -135,11 +159,12 @@ const LiveAudioChat: React.FC = () => {
       >
         <i className={`fas ${isConnecting ? 'fa-spinner fa-spin' : isActive ? 'fa-microphone-slash' : 'fa-microphone'}`}></i>
       </button>
-      {isActive && (
-        <div className="absolute bottom-16 right-0 w-64 bg-black/80 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-[10px] text-gray-300">
-          <div className="font-bold text-amber-500 mb-2">مكالمة نشطة...</div>
-          <div className="space-y-1">
+      {(isActive || transcript.length > 0 || currentBotText) && (
+        <div className="absolute bottom-16 right-0 w-64 bg-black/80 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-[10px] text-gray-300 shadow-2xl">
+          <div className="font-bold text-amber-500 mb-2">{isActive ? 'مكالمة نشطة...' : 'سجل المحادثة'}</div>
+          <div className="space-y-1 max-h-40 overflow-y-auto">
             {transcript.map((t, i) => <div key={i}>{t}</div>)}
+            {currentBotText && <div className="text-amber-200">المساعد: {currentBotText}</div>}
           </div>
         </div>
       )}

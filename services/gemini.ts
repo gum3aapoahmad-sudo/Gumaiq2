@@ -1,11 +1,28 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 
-// Standard client for most tasks
-const getClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+// وظيفة لإنشاء عميل جديد في كل مرة لضمان استخدام أحدث مفتاح API مختار
+const getFreshClient = () => {
+  const apiKey = process.env.API_KEY;
+  return new GoogleGenAI({ apiKey: apiKey });
+};
+
+// وظيفة مساعدة للتعامل مع أخطاء المفاتيح وتوجيه المستخدم لتجديد الاتصال
+const handleAiError = async (error: any) => {
+  console.error("AI Service Error:", error);
+  // إذا كان الخطأ يشير إلى مشكلة في المفتاح أو الكيان غير موجود
+  if (error.message?.includes("Requested entity was not found") || 
+      error.message?.includes("API key not valid") ||
+      error.status === 404 || error.status === 403) {
+    if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
+      await window.aistudio.openSelectKey();
+    }
+  }
+  return null;
+};
 
 export async function generateMarketingIdea(serviceName: string) {
-  const ai = getClient();
+  const ai = getFreshClient();
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
@@ -27,13 +44,12 @@ export async function generateMarketingIdea(serviceName: string) {
 
     return JSON.parse(response.text || "{}");
   } catch (error) {
-    console.error("Marketing Idea Error:", error);
-    return null;
+    return handleAiError(error);
   }
 }
 
 export async function editImagePrompt(base64Image: string, mimeType: string, prompt: string) {
-  const ai = getClient();
+  const ai = getFreshClient();
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -50,13 +66,12 @@ export async function editImagePrompt(base64Image: string, mimeType: string, pro
     }
     return null;
   } catch (error) {
-    console.error("Image Edit Error:", error);
-    return null;
+    return handleAiError(error);
   }
 }
 
 export async function generateAdvancedImage(prompt: string, size: "1K" | "2K" | "4K", aspectRatio: string) {
-  const ai = getClient();
+  const ai = getFreshClient();
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
@@ -74,13 +89,12 @@ export async function generateAdvancedImage(prompt: string, size: "1K" | "2K" | 
     }
     return null;
   } catch (error) {
-    console.error("Advanced Image Gen Error:", error);
-    return null;
+    return handleAiError(error);
   }
 }
 
 export async function groundedSearch(query: string) {
-  const ai = getClient();
+  const ai = getFreshClient();
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -92,13 +106,13 @@ export async function groundedSearch(query: string) {
       sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks || []
     };
   } catch (error) {
-    console.error("Search Grounding Error:", error);
+    console.error("Search Error:", error);
     return { text: "حدث خطأ أثناء البحث.", sources: [] };
   }
 }
 
 export async function generateVideo(prompt: string, aspectRatio: '16:9' | '9:16') {
-  const ai = getClient();
+  const ai = getFreshClient();
   try {
     let operation = await ai.models.generateVideos({
       model: 'veo-3.1-fast-generate-preview',
@@ -111,31 +125,37 @@ export async function generateVideo(prompt: string, aspectRatio: '16:9' | '9:16'
     });
 
     while (!operation.done) {
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 10000));
       operation = await ai.operations.getVideosOperation({ operation: operation });
     }
 
     const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+    // إضافة مفتاح API للتحميل لضمان الصلاحية
     const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
+    if (!response.ok) {
+      // إذا فشل التحميل بسبب الصلاحية، قد نحتاج لتجديد المفتاح
+      if (response.status === 401 || response.status === 403) {
+        await window.aistudio?.openSelectKey();
+      }
+      throw new Error("Failed to fetch video file: " + response.status);
+    }
     const blob = await response.blob();
     return URL.createObjectURL(blob);
   } catch (error) {
-    console.error("Video Generation Error:", error);
-    return null;
+    return handleAiError(error);
   }
 }
 
-export async function generalChat(message: string, history: any[] = []) {
-  const ai = getClient();
+export async function generalChatStream(message: string) {
+  const ai = getFreshClient();
   try {
     const chat = ai.chats.create({
       model: 'gemini-3-pro-preview',
       config: { systemInstruction: "أنت المساعد الذكي لشركة حلبي للخدمات الرقمية، بإدارة جمعة محيميد. أجب بأسلوب لبق واحترافي وباللغة العربية." }
     });
-    const response = await chat.sendMessage({ message });
-    return response.text;
+    return await chat.sendMessageStream({ message });
   } catch (error) {
-    console.error("Chat Error:", error);
-    return "عذراً، لم أستطع الرد حالياً.";
+    console.error("Chat Stream Error:", error);
+    return null;
   }
 }

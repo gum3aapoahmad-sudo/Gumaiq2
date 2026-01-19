@@ -18,7 +18,9 @@ const Navbar: React.FC = () => {
           </div>
           <div>
             <a 
-              href="https://wa.me/905348292352" 
+              href="https://api.whatsapp.com/send?phone=905348292352" 
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-bold transition-all transform hover:scale-105"
             >
               اطلب الآن

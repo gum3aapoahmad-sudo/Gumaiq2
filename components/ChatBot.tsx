@@ -1,7 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { generalChat } from '../services/gemini';
+import { generalChatStream } from '../services/gemini';
 import { canUseAI, incrementAIUsage, getRemainingUses } from '../utils/usageLimit';
+import { GenerateContentResponse } from "@google/genai";
 
 const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,12 +33,38 @@ const ChatBot: React.FC = () => {
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setLoading(true);
 
-    const botResponse = await generalChat(userMsg);
-    incrementAIUsage();
-    setRemaining(getRemainingUses());
-    
-    setMessages(prev => [...prev, { role: 'bot', text: botResponse || "عذراً، حدث خطأ." }]);
-    setLoading(false);
+    // Initial bot message placeholder
+    setMessages(prev => [...prev, { role: 'bot', text: '' }]);
+
+    try {
+      const stream = await generalChatStream(userMsg);
+      if (!stream) throw new Error("Stream failed");
+
+      let fullText = "";
+      for await (const chunk of stream) {
+        const c = chunk as GenerateContentResponse;
+        const textChunk = c.text;
+        if (textChunk) {
+          fullText += textChunk;
+          setMessages(prev => {
+            const newMessages = [...prev];
+            newMessages[newMessages.length - 1].text = fullText;
+            return newMessages;
+          });
+        }
+      }
+      incrementAIUsage();
+      setRemaining(getRemainingUses());
+    } catch (error) {
+      console.error(error);
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1].text = "عذراً، حدث خطأ أثناء الاتصال.";
+        return newMessages;
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -72,11 +99,13 @@ const ChatBot: React.FC = () => {
                 <div className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed ${
                   m.role === 'user' ? 'bg-amber-500 text-black font-bold' : 'bg-white/5 text-gray-200 border border-white/5'
                 }`}>
-                  {m.text}
+                  {m.text || (m.role === 'bot' && loading ? '...' : '')}
                 </div>
               </div>
             ))}
-            {loading && <div className="text-gray-500 text-xs animate-pulse">جاري الكتابة...</div>}
+            {loading && messages[messages.length - 1].text === '' && (
+               <div className="text-gray-500 text-xs animate-pulse">جاري التفكير...</div>
+            )}
           </div>
 
           <div className="p-4 border-t border-white/5 bg-neutral-800 flex gap-2">
@@ -86,15 +115,15 @@ const ChatBot: React.FC = () => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder={remaining > 0 ? "اكتب سؤالك هنا..." : "انتهت المحاولات"}
-              disabled={remaining === 0}
+              disabled={remaining === 0 || loading}
               className="flex-grow bg-black/40 border border-white/10 rounded-xl px-4 py-2 focus:ring-1 focus:ring-amber-500 outline-none text-sm disabled:opacity-50"
             />
             <button 
               onClick={handleSend}
-              disabled={remaining === 0}
+              disabled={remaining === 0 || loading}
               className="w-10 h-10 bg-amber-500 text-black rounded-xl flex items-center justify-center hover:bg-amber-600 disabled:bg-neutral-700"
             >
-              <i className="fas fa-paper-plane"></i>
+              <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-paper-plane'}`}></i>
             </button>
           </div>
         </div>

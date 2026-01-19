@@ -27,7 +27,9 @@ const ServiceCard: React.FC<Props> = ({ service }) => {
           <span className="text-2xl font-black text-amber-400">{service.price}</span>
         </div>
         <a 
-          href={`https://wa.me/905348292352?text=أريد طلب خدمة: ${service.title}`}
+          href={`https://api.whatsapp.com/send?phone=905348292352&text=${encodeURIComponent(`أريد طلب خدمة: ${service.title}`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
         >
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">

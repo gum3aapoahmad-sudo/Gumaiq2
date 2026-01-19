@@ -34,16 +34,18 @@ const Footer: React.FC = () => {
             <ul className="space-y-4 text-gray-400">
               <li className="flex items-center gap-4 group">
                 <span className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-black transition-all">📞</span>
-                <span className="font-bold">+905348292352 (جمعة محيميد)</span>
+                <span className="font-bold">
+                  <a href="https://api.whatsapp.com/send?phone=905348292352" target="_blank" rel="noopener noreferrer" className="hover:text-amber-500">+905348292352 (جمعة محيميد)</a>
+                </span>
               </li>
               <li className="flex items-center gap-4 group">
                 <span className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-black transition-all">📧</span>
                 <span className="font-bold">Gum3aapoahmad@gmail.com</span>
               </li>
               <li className="flex gap-6 mt-8">
-                <a href="https://wa.me/905348292352" target="_blank" className="text-2xl hover:text-green-500 transition-colors"><i className="fab fa-whatsapp"></i></a>
-                <a href="https://instagram.com/j_x_003" target="_blank" className="text-2xl hover:text-pink-500 transition-colors"><i className="fab fa-instagram"></i></a>
-                <a href="https://tiktok.com/@halabi_4_4" target="_blank" className="text-2xl hover:text-white transition-colors"><i className="fab fa-tiktok"></i></a>
+                <a href="https://api.whatsapp.com/send?phone=905348292352" target="_blank" rel="noopener noreferrer" className="text-2xl hover:text-green-500 transition-colors"><i className="fab fa-whatsapp"></i></a>
+                <a href="https://instagram.com/j_x_003" target="_blank" rel="noopener noreferrer" className="text-2xl hover:text-pink-500 transition-colors"><i className="fab fa-instagram"></i></a>
+                <a href="https://tiktok.com/@halabi_4_4" target="_blank" rel="noopener noreferrer" className="text-2xl hover:text-white transition-colors"><i className="fab fa-tiktok"></i></a>
               </li>
             </ul>
           </div>
