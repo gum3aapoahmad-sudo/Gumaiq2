@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ServiceCard from './components/ServiceCard';
@@ -11,8 +11,36 @@ import Portfolio from './components/Portfolio';
 import ChatBot from './components/ChatBot';
 import LiveAudioChat from './components/LiveAudioChat';
 import { SERVICES } from './constants';
+import { updateActivity, checkAndClearInactivity } from './utils/security';
 
 const App: React.FC = () => {
+  useEffect(() => {
+    // Initial check on load to see if previous session expired
+    if (checkAndClearInactivity()) {
+      console.warn("Session cleared due to inactivity.");
+    }
+
+    const handleActivity = () => updateActivity();
+
+    // Listen for global user activity indicators
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(event => window.addEventListener(event, handleActivity));
+
+    // Periodic background check every 5 minutes to catch inactivity while tab is open
+    const interval = setInterval(() => {
+      if (checkAndClearInactivity()) {
+        // Force a page reload to ensure the injected process.env.API_KEY is invalidated
+        // and all UI components reset to their unauthenticated state.
+        window.location.reload(); 
+      }
+    }, 300000);
+
+    return () => {
+      events.forEach(event => window.removeEventListener(event, handleActivity));
+      clearInterval(interval);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#050505] text-gray-100 selection:bg-amber-500 selection:text-black">
       <Navbar />

@@ -33,8 +33,6 @@ const GeminiAssistant: React.FC = () => {
       if (!hasKey) {
         // إذا لم يكن هناك مفتاح، نفتح نافذة الاختيار
         await window.aistudio.openSelectKey();
-        // ملاحظة: لا ننتظر تحديث الحالة هنا لتجنب "Race Condition"
-        // سنمضي قدماً ونحاول تنفيذ العملية، وإذا فشلت سيعالجها 'services/gemini.ts'
       }
     }
 
@@ -95,11 +93,17 @@ const GeminiAssistant: React.FC = () => {
     <div className="bg-neutral-800 rounded-[3rem] p-6 md:p-12 border border-white/5 max-w-6xl mx-auto my-20 shadow-2xl relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500"></div>
       
-      {/* Usage Limit & Billing Info */}
+      {/* Usage Limit, Security & Billing Info */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div className="bg-black/40 px-4 py-2 rounded-full border border-amber-500/30 flex items-center gap-3">
-          <span className="text-xs font-bold text-gray-400">المحاولات المتبقية:</span>
-          <span className={`text-sm font-black ${remaining > 0 ? 'text-amber-500' : 'text-red-500'}`}>{remaining} / 2</span>
+        <div className="flex items-center gap-4">
+          <div className="bg-black/40 px-4 py-2 rounded-full border border-amber-500/30 flex items-center gap-3">
+            <span className="text-xs font-bold text-gray-400">المحاولات المتبقية:</span>
+            <span className={`text-sm font-black ${remaining > 0 ? 'text-amber-500' : 'text-red-500'}`}>{remaining} / 2</span>
+          </div>
+          <div className="hidden lg:flex items-center gap-2 text-[10px] text-gray-500 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+             <i className="fas fa-clock-rotate-left text-amber-500/50"></i>
+             <span>تأمين الجلسة: سيتم حذف المفتاح بعد 60 دقيقة من الخمول</span>
+          </div>
         </div>
         
         <div className="flex items-center gap-4">

@@ -3,14 +3,19 @@ import React from 'react';
 
 const Hero: React.FC = () => {
   const WHATSAPP_URL = "https://wa.me/905348292352";
+  const HERO_IMG = "https://files.oaiusercontent.com/file-NAnw5x4qL9B7qX8N3r8N2T";
 
   return (
     <section id="hero" className="relative pt-48 pb-32 px-4 overflow-hidden text-right">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[700px] bg-amber-500/5 blur-[150px] rounded-full pointer-events-none opacity-50"></div>
       
       <div className="max-w-6xl mx-auto text-center relative z-10">
-        <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-400 text-sm font-black mb-10 tracking-widest animate-pulse">
-          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs font-black mb-10 tracking-widest">
+          <img 
+            src={HERO_IMG} 
+            className="w-6 h-6 rounded-full border border-amber-500/50 object-cover" 
+            alt="جمعة محيميد" 
+          />
           بإدارة المبدع: جمعة محيميد
         </div>
         
